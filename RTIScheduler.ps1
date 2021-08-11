@@ -25,6 +25,12 @@ $eschool_buildings = Import-CSV .\schools.csv | Select-Object School_id,School_n
 #$buildings = ($eschool_buildings | Select-Object -ExpandProperty School_id) -join '&p_building='
 
 $eschool_buildings | ForEach-Object {
+
+    if ($rti_building_numbers.Keys -notcontains "$($PSItem.School_name)") {
+        #building not specified in the $rti_building_numbers
+        return
+    }
+
     $eschool_building_number = $PSItem.School_id
     $rti_building_number = $rti_building_numbers.$($PSItem.School_name)
 
