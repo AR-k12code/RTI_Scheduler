@@ -25,9 +25,15 @@ if (!(Test-Path $currentPath\exports\RTI_Scheduler)) {
 }
 
 try {
+
     Connect-ToCognos
 
-    $eschool_buildings = Get-CogSchool | Select-Object School_id,School_name
+    if (Test-Path "$currentPath\schools.csv") {
+        #if you need to override anything out of Cognos you can use the same format as Clever schools.csv
+        $eschool_buildings = Import-CSV -Path "$currentPath\schools.csv" | Select-Object School_id,School_name
+    } else {
+        $eschool_buildings = Get-CogSchool | Select-Object School_id,School_name
+    }
     
 } catch {
     Write-Error "Failed to connect to Cognos."
@@ -85,5 +91,3 @@ $eschool_buildings | ForEach-Object {
         
     }
 }
-
-
