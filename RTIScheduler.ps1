@@ -50,7 +50,7 @@ $eschool_buildings | ForEach-Object {
     $eschool_building_number = $PSItem.School_id
     $rti_building_number = $rti_building_numbers.$($PSItem.School_name)
 
-    @('Students','Instructors','Courses','Performance','Schedule') | ForEach-Object {
+    @('Courses','Instructors','Students','Schedule','Performance') | ForEach-Object {
     
         $filePath = "$($currentPath)\exports\RTI_Scheduler\$($rti_building_number)-$($PSItem).csv"
         $url = "https://www.rtischeduler.com/sync-api/$($rti_building_number)/$($($PSItem).ToLower())"
