@@ -60,7 +60,7 @@ $eschool_buildings | ForEach-Object {
         }
             
         if ($SharedCognosFolder) {
-            Save-CognosReport -report "$PSItem" -cognosfolder "_Shared Data File Reports\RTI Scheduler Files" -TeamContent -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($PSItem).csv"
+            Save-CognosReport -report "$PSItem" -cognosfolder "_Shared Data File Reports\RTI Scheduler Files\23.3.6" -TeamContent -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($PSItem).csv"
         } else {
             Save-CognosReport -report "$PSItem" -cognosfolder "RTI Scheduler Files" -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($PSItem).csv"
         }
