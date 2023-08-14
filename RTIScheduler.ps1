@@ -1,5 +1,6 @@
 <#
 
+    .SYNOPSIS
     RTI Scheduler Automation for Arkansas Public Schools
     Author: Craig Millsap, CAMTech Computer Service, LLC.
 
@@ -70,23 +71,13 @@ $eschool_buildings | ForEach-Object {
             return
         }
 
-        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-        $headers.Add("rti-api-token", "$($RTIToken)")
+        $response = Invoke-RestMethod -Uri $url `
+            -Method Post `
+            -Headers @{ "rti-api-token" = "$($RTIToken)" } `
+            -Form @{
+                'upload' = Get-Item -Path "$filePath"
+            }
         
-        $fileBytes = [System.IO.File]::ReadAllBytes($filePath);
-        $fileEnc = [System.Text.Encoding]::GetEncoding('UTF-8').GetString($fileBytes);
-        $boundary = [System.Guid]::NewGuid().ToString();
-        $LF = "`r`n";
-        $bodyLines = (
-            "--$boundary",
-            "Content-Disposition: form-data; name=`"upload`"; filename=`"$($PSItem.ToLower()).csv`"",
-            "Content-Type: application/octet-stream$LF",
-            $fileEnc,
-            "--$boundary--$LF"
-        ) -join $LF
-        
-        $response = Invoke-RestMethod -Uri $URL -Method Post -ContentType "multipart/form-data; boundary=`"$boundary`"" -Body $bodyLines -Headers $headers
-
         Write-Output $response.logs
         
     }

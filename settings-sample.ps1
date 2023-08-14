@@ -11,3 +11,5 @@ $rti_building_numbers = @{
     'My Middle School' = 34399973
     'My High School' = 34399974
 }
+
+$uploadAttendance = $False
