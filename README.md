@@ -26,13 +26,26 @@ Open the settings file and put your API token in, School Name and the number fro
 
 You can generate a new RTI Scheduler token by going to "Data Sync API > Authentication > Generate New Token"
 
-## Attendance
+## Attendance from Cognos to RTI Scheduler
 ````
 .\RTIScheduler_Attendance.ps1
 ````
 
 This script will pull the current days attendance and submit it to the RTI Scheduler.
 
+## Attedance from RTI Scheduler to eSchool
+*YOU NEED TO UNDERSTAND WHAT YOU'RE DOING BEFORE EVER RUNNING THIS SCRIPT*
+Refer back to the disclaimer and liability warning at the top!
+````
+.\RTIScheduler_Upload_ATT_to_eSchool.ps1 -RunMode [V|R]
+````
+
+This script will pull the attendance from RTI Scheduler for the RTI Period and upload the absence to eSchool.  This script by default runs in Verification mode. Meaning it will not actually make the changes on the eSchool Database Tables. You must run it with the parameter ```` -RunMode R ```` after you have sufficiently tested this process.
+
+This process requires the ESMU6 upload defintion from the eSchoolModule. You can run the following command to create it.
+````
+New-eSPAttUploadDefinitions
+````
+
 ## Roadmap
-- [ ] Upload RTI Scheduler Attendance to eSchool (sample script included)
 - [ ] Ignore duplicate/failed schedule stuff
