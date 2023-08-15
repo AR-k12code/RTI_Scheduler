@@ -7,11 +7,16 @@
     .DESCRIPTION
     This will pull from Cognos and upload attendance to RTI Scheduler.
 
+    By default this script will run in verifcation mode. You must invoke via
+    .\RTIScheduler_Upload_ATT_to_eSchool.ps1 -RunMode R
+
     #1. YOU MUST MAKE SURE YOUR PERIOD/HOUR MATCHES BETWEEN ESCHOOL AND RTI SCHEDULER.
         Otherwise you'll end up submitting an absence for the wrong period.
 
     #2. Pretty sure this should only be run once a day. Well in advance of your attendance
-        clerk reviewing attendance. This needs a lot more testing.
+        clerk reviewing attendance.
+
+    #3. You need to set a default period for RTI Scheduler in the Sync Settings.
 
 #>
 
@@ -67,30 +72,37 @@ $eschool_buildings | ForEach-Object {
     $eschool_building_number = $PSItem.School_id
 
     if ($uploadAttendance) {
-        $RTIBuildingAttendance = Invoke-RestMethod -Uri "https://rtischeduler.com/sync-api/$($rti_building_number)/attendance/v2?date=$(Get-Date -Format "yyyy-MM-dd")&presentRecords=false" -Headers @{ "rti-api-token" = "$($RTIToken)" }
-        $RTIBuildingAttendance = $RTIBuildingAttendance | ForEach-Object {
-            [PSCustomObject]@{
-                "STUDENT_ID" = $PSItem.studentId
-                "BUILDING" = $eschool_building_number
-                "ATTENDANCE_CODE" = $PSitem.attendanceCode
-                "ATTENDANCE_DATE" = (Get-Date "$($PSitem.scheduleDate)").ToShortDateString()
-                "ATTENDANCE_PERIOD" = $PSitem.Period
-                "ATT_COMMENT" = "RTIScheduler"
-                "SCHOOL_YEAR" = $schoolyear
-                "SOURCE" = 'O' #Office
-                "SEQUENCE_NUM" = 1
-                "SUMMER_SCHOOL" = 'N'
-                "MINUTES_ABSENT" = $uploadAttendanceMinutes ? $uploadAttendanceMinutes : 11 #This is a guess. We have no way of knowing how long a period is in eSchool. 11 minutes should get us past the minimum required to be counted as absent.
-                "ENTRY_DATE_TIME" = $PSitem.scheduleDate
-                "ENTRY_USER" = $CognosUsername
-                "ENTRY_ORDER_NUM" = 1
-                "BOTTOMLINE" = 'Y'
-            }
+        $RTIBuildingAttendance = Invoke-RestMethod `
+            -Uri "https://rtischeduler.com/data-export-api/schools/$($rti_building_number)/attendance?date=$(Get-Date -Format "yyyy-MM-dd")&absencesOnly=true" `
+            -Headers @{ "rti-api-token" = "$($RTIToken)" } |
+            ForEach-Object {
+                [PSCustomObject]@{
+                    "STUDENT_ID" = $PSItem.studentId
+                    "BUILDING" = $eschool_building_number
+                    "ATTENDANCE_CODE" = $PSitem.attendanceCode
+                    "ATTENDANCE_DATE" = (Get-Date "$($PSitem.scheduleDate)").ToShortDateString()
+                    "ATTENDANCE_PERIOD" = $PSitem.Period
+                    "ATT_COMMENT" = "RTIScheduler"
+                    "SCHOOL_YEAR" = $schoolyear
+                    "SOURCE" = 'O' #Office
+                    "SEQUENCE_NUM" = 1
+                    "SUMMER_SCHOOL" = 'N'
+                    "MINUTES_ABSENT" = 9 #($uploadAttendanceMinutes ? $uploadAttendanceMinutes : 11) #This is a guess. We have no way of knowing how long a period is in eSchool. 11 minutes should get us past the minimum required to be counted as absent.
+                    "ENTRY_DATE_TIME" = $PSitem.scheduleDate
+                    "ENTRY_USER" = $CognosUsername
+                    "ENTRY_ORDER_NUM" = 1
+                    "BOTTOMLINE" = 'Y'
+                }
         }
 
         if ($RTIBuildingAttendance) {
             #Append without headers. Uploads to eSchool do not have headers.
-            $RTIAttendance += $RTIBuildingAttendance | ConvertTo-Csv -UseQuotes AsNeeded -NoTypeInformation | Select-Object -Property * -Skip 1
+            $RTIAttendance += $RTIBuildingAttendance | ConvertTo-Csv -UseQuotes AsNeeded -NoTypeInformation | Select-Object -Skip 1
+
+            Invoke-RestMethod `
+                -Uri "https://rtischeduler.com/data-export-api/schools/$($rti_building_number)/attendance/finalize-by-date?date=$(Get-Date -Format "yyyy-MM-dd")" `
+                -Headers @{ "rti-api-token" = "$($RTIToken)" } `
+                -Method Post
         }
     }
 
