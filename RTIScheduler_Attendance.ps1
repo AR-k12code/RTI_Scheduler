@@ -61,13 +61,13 @@ $eschool_buildings | ForEach-Object {
                 'Date' = $PSItem.Attendance_date
                 'Description' = $PSItem.Attendance_comment
             }
-        } | Export-CSV "exports\RTI_Scheduler\$($rti_building_number)-attendance.csv" -UseQuotes AsNeeded -Force -NoTypeInformation
+        } | Export-CSV "$currentPath\exports\RTI_Scheduler\$($rti_building_number)-attendance.csv" -UseQuotes AsNeeded -Force -NoTypeInformation
 
         Invoke-RestMethod -Uri ("https://rtischeduler.com/sync-api/$($rti_building_number)/attendance") `
             -Method Post `
             -Headers @{ "rti-api-token" = "$($RTIToken)" } `
             -Form @{
-                'upload' = Get-Item -Path "exports\RTI_Scheduler\$($rti_building_number)-attendance.csv"
+                'upload' = Get-Item -Path "$currentPath\exports\RTI_Scheduler\$($rti_building_number)-attendance.csv"
             }
 
     } else {
