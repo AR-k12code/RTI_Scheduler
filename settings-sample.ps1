@@ -12,4 +12,5 @@ $rti_building_numbers = @{
     'My High School' = 34399974
 }
 
-$uploadAttendance = $False
+#Performance is usually pulled via IPRs. Should it be pulled from TAC?
+$TACPerformance = $true
