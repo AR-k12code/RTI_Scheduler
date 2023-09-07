@@ -33,7 +33,7 @@ You can generate a new RTI Scheduler token by going to "Data Sync API > Authenti
 
 This script will pull the current days attendance and submit it to the RTI Scheduler.
 
-## Attedance from RTI Scheduler to eSchool
+## Attendance from RTI Scheduler to eSchool
 *YOU NEED TO UNDERSTAND WHAT YOU'RE DOING BEFORE EVER RUNNING THIS SCRIPT*
 Refer back to the disclaimer and liability warning at the top!
 ````

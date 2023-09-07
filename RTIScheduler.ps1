@@ -54,22 +54,17 @@ $eschool_buildings | ForEach-Object {
     @('Courses','Instructors','Students','Schedule','Performance') | ForEach-Object {
     
         $report = $PSItem
-        $filePath = "$($currentPath)\exports\RTI_Scheduler\$($rti_building_number)-$($PSItem).csv"
+        $filePath = "$($currentPath)\exports\RTI_Scheduler\$($rti_building_number)-$($report).csv"
         $url = "https://www.rtischeduler.com/sync-api/$($rti_building_number)/$($($PSItem).ToLower())"
 
-        if (Test-Path "$($currentPath)\exports\RTI_Scheduler\$($rti_building_number)-$($PSItem).csv") {
+        if (Test-Path $filePath) {
             $fileHash = (Get-FileHash -Path $filePath).Hash
         }
-            
-        if ($report -eq 'Performance' -and $TACPerformance) {
-            $report = 'Performance-Alternative'
-        }
 
-        #leave the filename using the $PSItem.
         if ($SharedCognosFolder) {
-            Save-CognosReport -report "$report" -cognosfolder "_Shared Data File Reports\RTI Scheduler Files\23.3.6" -TeamContent -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($PSItem).csv"
+            Save-CognosReport -report "$report" -cognosfolder "_Shared Data File Reports\RTI Scheduler Files\23.9.7" -TeamContent -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($report).csv"
         } else {
-            Save-CognosReport -report "$report" -cognosfolder "RTI Scheduler Files" -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($PSItem).csv"
+            Save-CognosReport -report "$report" -cognosfolder "RTI Scheduler Files" -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($report).csv"
         }
 
         if ($fileHash -eq (Get-FileHash -Path $filePath).Hash) {
