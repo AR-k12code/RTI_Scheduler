@@ -72,9 +72,13 @@ $eschool_buildings | ForEach-Object {
     $eschool_building_number = $PSItem.School_id
 
     if ($uploadAttendance) {
-        $RTIBuildingAttendance = Invoke-RestMethod `
+        $RTIBuildingAttendanceFromRTI = Invoke-RestMethod `
             -Uri "https://rtischeduler.com/data-export-api/schools/$($rti_building_number)/attendance?date=$(Get-Date -Format "yyyy-MM-dd")&absencesOnly=true" `
-            -Headers @{ "rti-api-token" = "$($RTIToken)" } |
+            -Headers @{ "rti-api-token" = "$($RTIToken)" }
+        
+
+        if ($RTIBuildingAttendanceFromRTI) {
+            $RTIBuildingAttendance = $RTIBuildingAttendanceFromRTI |
             ForEach-Object {
                 [PSCustomObject]@{
                     "STUDENT_ID" = $PSItem.studentId
@@ -93,6 +97,7 @@ $eschool_buildings | ForEach-Object {
                     "ENTRY_ORDER_NUM" = 1
                     "BOTTOMLINE" = 'Y'
                 }
+            }
         }
 
         if ($RTIBuildingAttendance) {
