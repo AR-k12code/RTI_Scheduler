@@ -44,6 +44,15 @@ if ([int](Get-Date -Format MM) -ge 7) {
 }
 
 try {
+    if ((Get-Date "$($attendanceUntilDate)").Year -ne $schoolyear) {
+        Throw        
+    }
+} catch {
+    Write-Error "The `$attendanceUntilDate must be in the current school year." -ErrorAction Stop
+    exit 1
+}
+
+try {
 
     Connect-ToCognos
 
@@ -59,6 +68,7 @@ try {
     exit 1
 }
 
+if ($islinux) { $OFS = "`r`n" }
 $RTIAttendance = '' #string to to hold the CSV (without headers) to upload to eSchool.
 
 $eschool_buildings | ForEach-Object {
@@ -80,6 +90,10 @@ $eschool_buildings | ForEach-Object {
         if ($RTIBuildingAttendanceFromRTI) {
             $RTIBuildingAttendance = $RTIBuildingAttendanceFromRTI |
             ForEach-Object {
+
+                #if absenceCode is set in the settings.ps1 then we will use it when we get an A from RTI Scheduler. If it doesn't match A then we will use the value from RTI Scheduler. IE. T for tardy.
+                $attendanceCode = $absenceCode ? ($PSItem.attendanceCode -eq 'A' ? $absenceCode : $PSItem.attendanceCode) : $PSItem.attendanceCode
+
                 [PSCustomObject]@{
                     "STUDENT_ID" = $PSItem.studentId
                     "BUILDING" = $eschool_building_number
@@ -91,7 +105,7 @@ $eschool_buildings | ForEach-Object {
                     "SOURCE" = 'O' #Office
                     "SEQUENCE_NUM" = 1
                     "SUMMER_SCHOOL" = 'N'
-                    "MINUTES_ABSENT" = 9 #($uploadAttendanceMinutes ? $uploadAttendanceMinutes : 11) #This is a guess. We have no way of knowing how long a period is in eSchool. 11 minutes should get us past the minimum required to be counted as absent.
+                    "MINUTES_ABSENT" = ($uploadAttendanceMinutes ? $uploadAttendanceMinutes : 11) #This is a guess. We have no way of knowing how long a period is in eSchool. 11 minutes should get us past the minimum required to be counted as absent.
                     "ENTRY_DATE_TIME" = $PSitem.scheduleDate
                     "ENTRY_USER" = $CognosUsername
                     "ENTRY_ORDER_NUM" = 1
@@ -103,6 +117,7 @@ $eschool_buildings | ForEach-Object {
         if ($RTIBuildingAttendance) {
             #Append without headers. Uploads to eSchool do not have headers.
             $RTIAttendance += $RTIBuildingAttendance | ConvertTo-Csv -UseQuotes AsNeeded -NoTypeInformation | Select-Object -Skip 1
+            if ($islinux) { $RTIAttendance +=  "`r`n" }
 
             Invoke-RestMethod `
                 -Uri "https://rtischeduler.com/data-export-api/schools/$($rti_building_number)/attendance/finalize-by-date?date=$(Get-Date -Format "yyyy-MM-dd")" `
