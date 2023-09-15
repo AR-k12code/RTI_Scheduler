@@ -97,7 +97,7 @@ $eschool_buildings | ForEach-Object {
                 [PSCustomObject]@{
                     "STUDENT_ID" = $PSItem.studentId
                     "BUILDING" = $eschool_building_number
-                    "ATTENDANCE_CODE" = $PSitem.attendanceCode
+                    "ATTENDANCE_CODE" = $attendanceCode
                     "ATTENDANCE_DATE" = (Get-Date "$($PSitem.scheduleDate)").ToShortDateString()
                     "ATTENDANCE_PERIOD" = $PSitem.Period
                     "ATT_COMMENT" = "RTIScheduler"
