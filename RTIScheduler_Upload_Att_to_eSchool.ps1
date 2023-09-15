@@ -80,6 +80,10 @@ $eschool_buildings | ForEach-Object {
         if ($RTIBuildingAttendanceFromRTI) {
             $RTIBuildingAttendance = $RTIBuildingAttendanceFromRTI |
             ForEach-Object {
+                #Override the absence attenceance code with the value provided in settings.ps1
+                if ($absenceCode -ne "A" -And $PSitem.attendanceCode -eq "A") {
+                    $PSitem.attendanceCode = $absenceCode
+                }
                 [PSCustomObject]@{
                     "STUDENT_ID" = $PSItem.studentId
                     "BUILDING" = $eschool_building_number
