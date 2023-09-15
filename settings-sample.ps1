@@ -11,3 +11,6 @@ $rti_building_numbers = @{
     'My Middle School' = 34399973
     'My High School' = 34399974
 }
+
+#Change this value to override the attendance code for absences if you need a code other than "A"
+$absenceCode = "A"
