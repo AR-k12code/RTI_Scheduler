@@ -24,10 +24,6 @@ Param(
     [Parameter(Mandatory=$false)]$RunMode = 'V' #R for Run, V for Verification.
 )
 
-
-Write-Warning "This script is not ready for production. It needs a lot more testing. Proceed at your own risk. Press enter to contiue or exit this terminal."
-Read-Host " "
-
 $currentPath=(Split-Path ((Get-Variable MyInvocation -Scope 0).Value).MyCommand.Path)
 
 if (!(Test-Path $currentPath\settings.ps1)) {
