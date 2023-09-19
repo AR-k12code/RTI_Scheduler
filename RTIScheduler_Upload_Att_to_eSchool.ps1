@@ -33,6 +33,10 @@ if (!(Test-Path $currentPath\settings.ps1)) {
 
 . $currentPath\settings.ps1
 
+if ((Test-Path $currentPath\attendance_overrides.ps1)) {
+    . $currentPath\attendance_overrides.ps1
+}
+
 if ([int](Get-Date -Format MM) -ge 7) {
     $schoolyear = [int](Get-Date -Format yyyy) + 1
 } else {
