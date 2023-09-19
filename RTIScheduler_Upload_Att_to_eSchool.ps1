@@ -119,7 +119,7 @@ $eschool_buildings | ForEach-Object {
             $RTIAttendance += $RTIBuildingAttendance | ConvertTo-Csv -UseQuotes AsNeeded -NoTypeInformation | Select-Object -Skip 1
             if ($islinux) { $RTIAttendance +=  "`r`n" }
             if (Test-Path "$currentPath\attendance_overrides.ps1") {
-                #Run the function to modify the attendance import
+                $RTIAttendance = Modify-Attendance -rawAttendance $RTIAttendance
             }
             
 
