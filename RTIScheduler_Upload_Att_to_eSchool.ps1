@@ -114,6 +114,10 @@ $eschool_buildings | ForEach-Object {
             #Append without headers. Uploads to eSchool do not have headers.
             $RTIAttendance += $RTIBuildingAttendance | ConvertTo-Csv -UseQuotes AsNeeded -NoTypeInformation | Select-Object -Skip 1
             if ($islinux) { $RTIAttendance +=  "`r`n" }
+            if (Test-Path "$currentPath\attendance_overrides.ps1") {
+                #Run the function to modify the attendance import
+            }
+            
 
             Invoke-RestMethod `
                 -Uri "https://rtischeduler.com/data-export-api/schools/$($rti_building_number)/attendance/finalize-by-date?date=$(Get-Date -Format "yyyy-MM-dd")" `
