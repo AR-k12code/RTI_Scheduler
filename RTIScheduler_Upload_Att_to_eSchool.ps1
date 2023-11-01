@@ -35,6 +35,12 @@ if (!(Test-Path "$PSScriptRoot\exports\RTI_Scheduler\")) {
     New-Item -Path "$PSScriptRoot\exports\RTI_Scheduler\" -ItemType Directory -Force
 }
 
+#Verify thte ESMu6 Upload Definition exists in eSchool.
+if ((Invoke-eSPExecuteSearch -SearchType UPLOADDEF | Select-Object -ExpandProperty interface_id) -notcontains 'ESMU6') {
+    Write-Error "Missing the ESMU6 Upload Definition in eSchool." -ErrorAction Stop
+    exit(1)
+}
+
 $schoolyear = (Get-Date).Month -ge 7 ? (Get-Date).Year + 1 : (Get-Date).Year
 
 try {
@@ -111,7 +117,7 @@ $eschool_buildings | ForEach-Object {
         if ($RTIBuildingAttendance) {
             #Append without headers. Uploads to eSchool do not have headers.
             $RTIAttendance += $RTIBuildingAttendance | ConvertTo-Csv -UseQuotes AsNeeded -NoTypeInformation | Select-Object -Skip 1
-            if ($islinux) { $RTIAttendance +=  "`r`n" }
+            
 
             Invoke-RestMethod `
                 -Uri "https://rtischeduler.com/data-export-api/schools/$($rti_building_number)/attendance/finalize-by-date?date=$(Get-Date -Format "yyyy-MM-dd")" `
@@ -122,13 +128,18 @@ $eschool_buildings | ForEach-Object {
 
 }
 
-if ($uploadAttendance) {
+if ($RTIAttendance -ne '') {
+    if ($uploadAttendance) {
 
-    if ((Invoke-eSPExecuteSearch -SearchType UPLOADDEF | Select-Object -ExpandProperty interface_id) -notcontains 'ESMU6') {
-        Write-Error "Missing the ESMU6 Upload Definition in eSchool." -ErrorAction Stop
+        if ($islinux) { $RTIAttendance += "`r`n" }
+
+        $RTIAttendance | Out-File "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv" -Force
+        Submit-eSPFile -InFile "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv"
+        Invoke-eSPUploadDefinition -InterfaceID ESMU6 -RunMode $RunMode -InsertNewRecords -DoNotUpdateExistingRecords -Wait
+
+    } else {
+        Write-Warning "Not configured to upload attendance."
     }
-
-    $RTIAttendance | Out-File "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv" -Force
-    Submit-eSPFile -InFile "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv"
-    Invoke-eSPUploadDefinition -InterfaceID ESMU6 -RunMode $RunMode -InsertNewRecords -DoNotUpdateExistingRecords -Wait
+} else {
+    Write-Warning "No attendance data for today."
 }
