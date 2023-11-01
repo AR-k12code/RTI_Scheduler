@@ -1,22 +1,22 @@
 <#
 
-    .SYNOPSIS
-    RTI Scheduler Attendance for Arkansas Public Schools
-    Author: Craig Millsap, CAMTech Computer Service, LLC.
+.SYNOPSIS
+RTI Scheduler Attendance for Arkansas Public Schools
+Author: Craig Millsap, CAMTech Computer Service, LLC.
 
-    .DESCRIPTION
-    This will pull from Cognos and upload attendance to RTI Scheduler.
+.DESCRIPTION
+This will pull from Cognos and upload attendance to RTI Scheduler.
 
-    By default this script will run in verifcation mode. You must invoke via
-    .\RTIScheduler_Upload_ATT_to_eSchool.ps1 -RunMode R
+By default this script will run in verifcation mode. You must invoke via
+.\RTIScheduler_Upload_ATT_to_eSchool.ps1 -RunMode R
 
-    #1. YOU MUST MAKE SURE YOUR PERIOD/HOUR MATCHES BETWEEN ESCHOOL AND RTI SCHEDULER.
-        Otherwise you'll end up submitting an absence for the wrong period.
+#1. YOU MUST MAKE SURE YOUR PERIOD/HOUR MATCHES BETWEEN ESCHOOL AND RTI SCHEDULER.
+    Otherwise you'll end up submitting an absence for the wrong period.
 
-    #2. Pretty sure this should only be run once a day. Well in advance of your attendance
-        clerk reviewing attendance.
+#2. Pretty sure this should only be run once a day. Well in advance of your attendance
+    clerk reviewing attendance.
 
-    #3. You need to set a default period for RTI Scheduler in the Sync Settings.
+#3. You need to set a default period for RTI Scheduler in the Sync Settings.
 
 #>
 
@@ -24,20 +24,18 @@ Param(
     [Parameter(Mandatory=$false)]$RunMode = 'V' #R for Run, V for Verification.
 )
 
-$currentPath=(Split-Path ((Get-Variable MyInvocation -Scope 0).Value).MyCommand.Path)
-
-if (!(Test-Path $currentPath\settings.ps1)) {
+if (!(Test-Path $PSScriptRoot\settings.ps1)) {
     Write-Host "Error: settings.ps1 file not found. Please use the settings-sample.ps1 as an example."
     exit(1)
-}
-
-. $currentPath\settings.ps1
-
-if ([int](Get-Date -Format MM) -ge 7) {
-    $schoolyear = [int](Get-Date -Format yyyy) + 1
 } else {
-    $schoolyear = [int](Get-Date -Format yyyy)
+    . $PSScriptRoot\settings.ps1
 }
+
+if (!(Test-Path "$PSScriptRoot\exports\RTI_Scheduler\")) {
+    New-Item -Path "$PSScriptRoot\exports\RTI_Scheduler\" -ItemType Directory -Force
+}
+
+$schoolyear = (Get-Date).Month -ge 7 ? (Get-Date).Year + 1 : (Get-Date).Year
 
 try {
     if ((Get-Date "$($attendanceUntilDate)").Year -ne $schoolyear) {
@@ -52,9 +50,9 @@ try {
 
     Connect-ToCognos
 
-    if (Test-Path "$currentPath\schools.csv") {
+    if (Test-Path "$PSScriptRoot\schools.csv") {
         #if you need to override anything out of Cognos you can use the same format as Clever schools.csv
-        $eschool_buildings = Import-CSV -Path "$currentPath\schools.csv" | Select-Object School_id,School_name
+        $eschool_buildings = Import-CSV -Path "$PSScriptRoot\schools.csv" | Select-Object School_id,School_name
     } else {
         $eschool_buildings = Get-CogSchool | Select-Object School_id,School_name
     }
@@ -130,7 +128,7 @@ if ($uploadAttendance) {
         Write-Error "Missing the ESMU6 Upload Definition in eSchool." -ErrorAction Stop
     }
 
-    $RTIAttendance | Out-File "exports\RTI_Scheduler\attendance_upload.csv" -Force
-    Submit-eSPFile -InFile "exports\RTI_Scheduler\attendance_upload.csv"
+    $RTIAttendance | Out-File "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv" -Force
+    Submit-eSPFile -InFile "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv"
     Invoke-eSPUploadDefinition -InterfaceID ESMU6 -RunMode $RunMode -InsertNewRecords -DoNotUpdateExistingRecords -Wait
 }

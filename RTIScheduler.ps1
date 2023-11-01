@@ -1,37 +1,31 @@
 <#
 
-    .SYNOPSIS
-    RTI Scheduler Automation for Arkansas Public Schools
-    Author: Craig Millsap, CAMTech Computer Service, LLC.
+.SYNOPSIS
+RTI Scheduler Automation for Arkansas Public Schools
+Author: Craig Millsap, CAMTech Computer Service, LLC.
 
 #>
 
-$currentPath=(Split-Path ((Get-Variable MyInvocation -Scope 0).Value).MyCommand.Path)
-
-if (!(Test-Path $currentPath\settings.ps1)) {
+if (!(Test-Path $PSScriptRoot\settings.ps1)) {
     Write-Host "Error: settings.ps1 file not found. Please use the settings-sample.ps1 as an example."
     exit(1)
-}
-
-. $currentPath\settings.ps1
-
-if ([int](Get-Date -Format MM) -ge 7) {
-    $schoolyear = [int](Get-Date -Format yyyy) + 1
 } else {
-    $schoolyear = [int](Get-Date -Format yyyy)
+    . $PSScriptRoot\settings.ps1
 }
 
-if (!(Test-Path $currentPath\exports\RTI_Scheduler)) {
-    New-Item -Name "RTI_SCheduler" -ItemType Directory -Path "$currentPath\exports\"
+if (!(Test-Path $PSScriptRoot\exports\RTI_Scheduler)) {
+    New-Item -Name "RTI_SCheduler" -ItemType Directory -Path "$PSScriptRoot\exports\" -Force
 }
+
+$schoolyear = (Get-Date).Month -ge 7 ? (Get-Date).Year + 1 : (Get-Date).Year
 
 try {
 
     Connect-ToCognos
 
-    if (Test-Path "$currentPath\schools.csv") {
+    if (Test-Path "$PSScriptRoot\schools.csv") {
         #if you need to override anything out of Cognos you can use the same format as Clever schools.csv
-        $eschool_buildings = Import-CSV -Path "$currentPath\schools.csv" | Select-Object School_id,School_name
+        $eschool_buildings = Import-CSV -Path "$PSScriptRoot\schools.csv" | Select-Object School_id,School_name
     } else {
         $eschool_buildings = Get-CogSchool | Select-Object School_id,School_name
     }
@@ -54,7 +48,7 @@ $eschool_buildings | ForEach-Object {
     @('Courses','Instructors','Students','Schedule','Performance') | ForEach-Object {
     
         $report = $PSItem
-        $filePath = "$($currentPath)\exports\RTI_Scheduler\$($rti_building_number)-$($report).csv"
+        $filePath = "$($PSScriptRoot)\exports\RTI_Scheduler\$($rti_building_number)-$($report).csv"
         $url = "https://www.rtischeduler.com/sync-api/$($rti_building_number)/$($($PSItem).ToLower())"
 
         if (Test-Path $filePath) {
@@ -62,9 +56,9 @@ $eschool_buildings | ForEach-Object {
         }
 
         if ($SharedCognosFolder) {
-            Save-CognosReport -report "$report" -cognosfolder "_Shared Data File Reports\RTI Scheduler Files\23.9.7" -TeamContent -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($report).csv"
+            Save-CognosReport -report "$report" -cognosfolder "_Shared Data File Reports\RTI Scheduler Files\23.9.7" -TeamContent -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$PSScriptRoot\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($report).csv"
         } else {
-            Save-CognosReport -report "$report" -cognosfolder "RTI Scheduler Files" -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$currentPath\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($report).csv"
+            Save-CognosReport -report "$report" -cognosfolder "RTI Scheduler Files" -reportparams "&p_year=$($schoolyear)&p_building=$eschool_building_number" -savepath "$PSScriptRoot\exports\RTI_Scheduler" -TrimCSVWhiteSpace -FileName "$($rti_building_number)-$($report).csv"
         }
 
         if ($fileHash -eq (Get-FileHash -Path $filePath).Hash) {

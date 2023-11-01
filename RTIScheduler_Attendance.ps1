@@ -1,36 +1,34 @@
 <#
 
-    .SYNOPSIS
-    RTI Scheduler Attendance for Arkansas Public Schools
-    Author: Craig Millsap, CAMTech Computer Service, LLC.
+.SYNOPSIS
+RTI Scheduler Attendance for Arkansas Public Schools
+Author: Craig Millsap, CAMTech Computer Service, LLC.
 
-    .DESCRIPTION
-    This will pull attendance from Cognos and upload to RTI Scheduler.
+.DESCRIPTION
+This will pull attendance from Cognos and upload to RTI Scheduler.
 
 #>
 
-$currentPath=(Split-Path ((Get-Variable MyInvocation -Scope 0).Value).MyCommand.Path)
-
-if (!(Test-Path $currentPath\settings.ps1)) {
+if (!(Test-Path $PSScriptRoot\settings.ps1)) {
     Write-Host "Error: settings.ps1 file not found. Please use the settings-sample.ps1 as an example."
     exit(1)
-}
-
-. $currentPath\settings.ps1
-
-if ([int](Get-Date -Format MM) -ge 7) {
-    $schoolyear = [int](Get-Date -Format yyyy) + 1
 } else {
-    $schoolyear = [int](Get-Date -Format yyyy)
+    . $PSScriptRoot\settings.ps1
 }
+
+if (!(Test-Path "$PSScriptRoot\exports\RTI_Scheduler\")) {
+    New-Item -Path "$PSScriptRoot\exports\RTI_Scheduler\" -ItemType Directory -Force
+}
+
+$schoolyear = (Get-Date).Month -ge 7 ? (Get-Date).Year + 1 : (Get-Date).Year
 
 try {
 
     Connect-ToCognos
 
-    if (Test-Path "$currentPath\schools.csv") {
+    if (Test-Path "$PSScriptRoot\schools.csv") {
         #if you need to override anything out of Cognos you can use the same format as Clever schools.csv
-        $eschool_buildings = Import-CSV -Path "$currentPath\schools.csv" | Select-Object School_id,School_name
+        $eschool_buildings = Import-CSV -Path "$PSScriptRoot\schools.csv" | Select-Object School_id,School_name
     } else {
         $eschool_buildings = Get-CogSchool | Select-Object School_id,School_name
     }
@@ -61,13 +59,13 @@ $eschool_buildings | ForEach-Object {
                 'Date' = $PSItem.Attendance_date
                 'Description' = $PSItem.Attendance_comment
             }
-        } | Export-CSV "$currentPath\exports\RTI_Scheduler\$($rti_building_number)-attendance.csv" -UseQuotes AsNeeded -Force -NoTypeInformation
+        } | Export-CSV "$PSScriptRoot\exports\RTI_Scheduler\$($rti_building_number)-attendance.csv" -UseQuotes AsNeeded -Force -NoTypeInformation
 
         Invoke-RestMethod -Uri ("https://rtischeduler.com/sync-api/$($rti_building_number)/attendance") `
             -Method Post `
             -Headers @{ "rti-api-token" = "$($RTIToken)" } `
             -Form @{
-                'upload' = Get-Item -Path "$currentPath\exports\RTI_Scheduler\$($rti_building_number)-attendance.csv"
+                'upload' = Get-Item -Path "$PSScriptRoot\exports\RTI_Scheduler\$($rti_building_number)-attendance.csv"
             }
 
     } else {
