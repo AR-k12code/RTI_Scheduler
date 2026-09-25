@@ -98,7 +98,7 @@ $eschool_buildings | ForEach-Object {
                     "STUDENT_ID" = $PSItem.studentId
                     "BUILDING" = $eschool_building_number
                     "ATTENDANCE_CODE" = $attendanceCode
-                    "ATTENDANCE_DATE" = (Get-Date "$($PSitem.scheduleDate)").ToShortDateString()
+                    "ATTENDANCE_DATE" = (Get-Date "$($PSitem.attendanceDate)").ToShortDateString()
                     "ATTENDANCE_PERIOD" = $PSitem.Period
                     "ATT_COMMENT" = "RTIScheduler"
                     "SCHOOL_YEAR" = $schoolyear
@@ -106,7 +106,7 @@ $eschool_buildings | ForEach-Object {
                     "SEQUENCE_NUM" = 1
                     "SUMMER_SCHOOL" = 'N'
                     "MINUTES_ABSENT" = ($uploadAttendanceMinutes ? $uploadAttendanceMinutes : 11) #This is a guess. We have no way of knowing how long a period is in eSchool. 11 minutes should get us past the minimum required to be counted as absent.
-                    "ENTRY_DATE_TIME" = $PSitem.scheduleDate
+                    "ENTRY_DATE_TIME" = $PSitem.attendanceDate
                     "ENTRY_USER" = $CognosUsername
                     "ENTRY_ORDER_NUM" = 1
                     "BOTTOMLINE" = 'Y'
