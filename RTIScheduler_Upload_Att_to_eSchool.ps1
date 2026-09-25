@@ -68,7 +68,7 @@ try {
     exit 1
 }
 
-if ($islinux) { $OFS = "`r`n" }
+$OFS = "`r`n"
 $RTIAttendance = '' #string to to hold the CSV (without headers) to upload to eSchool.
 
 $eschool_buildings | ForEach-Object {
@@ -131,7 +131,7 @@ $eschool_buildings | ForEach-Object {
 if ($RTIAttendance -ne '') {
     if ($uploadAttendance) {
 
-        if ($islinux) { $RTIAttendance += "`r`n" }
+        if ($IsLinux) { $RTIAttendance += "`r`n" } #Linux needs an additional line break at the end.
 
         $RTIAttendance | Out-File "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv" -Force
         Submit-eSPFile -InFile "$PSScriptRoot\exports\RTI_Scheduler\attendance_upload.csv"
