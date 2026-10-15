@@ -66,12 +66,19 @@ $eschool_buildings | ForEach-Object {
             return
         }
 
-        $response = Invoke-RestMethod -Uri $url `
-            -Method Post `
-            -Headers @{ "rti-api-token" = "$($RTIToken)" } `
-            -Form @{
+        #Some districts use Clever to sync rostering data. We need to ignore the http error on 'Courses','Instructors','Students', and 'Schedule'
+        $params = @{
+            Uri = $url
+            Method = 'Post'
+            Headers = @{ "rti-api-token" = "$($RTIToken)" }
+            Form = @{
                 'upload' = Get-Item -Path "$filePath"
             }
+            SkipHttpErrorCheck = ($_ -in @('Courses','Instructors','Students','Schedule')) ? $true : $false
+            Verbose = $true
+        }
+
+        $response = Invoke-RestMethod @params
         
         Write-Output $response.logs
         
